@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="用交互动效理解浮动利率借贷、固定利率与固定到期日，以及 Morpho Midnight 的风险结构。"
+    />
+    <meta name="theme-color" content="#07111f" />
+    <title>Fixed or Floating?｜借贷利率与到期风险实验室</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307111f'/%3E%3Cpath d='M14 39c7-19 13 9 21-10s10 5 15-6' fill='none' stroke='%236cf2c2' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='47' cy='23' r='5' fill='%23ffb45d'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="返回顶部">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span>Fixed or Floating?</span>
+      </a>
+      <nav aria-label="页面导航">
+        <a href="#compare">两种利率</a>
+        <a href="#maturity">到期日</a>
+        <a href="#risk">风险实验</a>
+      </nav>
+      <a
+        class="source-link"
+        href="https://docs.morpho.org/learn/concepts/midnight/"
+        target="_blank"
+        rel="noreferrer"
+        >Morpho 官方资料 ↗</a
+      >
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="hero-copy reveal">
+          <div class="eyebrow"><span></span> LENDING / BORROWING, EXPLAINED</div>
+          <h1>借钱的价格，<br /><em>会漂</em>，还是<em>会到期</em>？</h1>
+          <p class="hero-lead">
+            浮动利率像打车计价器：市场越拥挤，价格可能越高。固定利率像提前买好的车票：价格锁定，但你必须记住到站时间。
+          </p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#lab">开始 3 分钟实验</a>
+            <button class="text-button" id="autoplayHero" type="button">▶ 播放 45 秒速懂</button>
+          </div>
+          <p class="microcopy">无需钱包 · 不连接主网 · 所有金额仅用于教学</p>
+        </div>
+
+        <div class="loan-machine reveal" id="lab">
+          <div class="machine-head">
+            <div>
+              <span class="machine-kicker">INTERACTIVE LOAN MACHINE</span>
+              <h2>同样借 10,000 USDC</h2>
+            </div>
+            <span class="live-pill"><i></i> LIVE MODEL</span>
+          </div>
+
+          <div class="mode-switch" role="tablist" aria-label="选择借贷模式">
+            <button class="mode-button active" type="button" role="tab" aria-selected="true" data-mode="variable">
+              Variable 浮动
+            </button>
+            <button class="mode-button" type="button" role="tab" aria-selected="false" data-mode="fixed">
+              Fixed 固定
+            </button>
+          </div>
+
+          <div class="machine-body" data-panel="variable">
+            <div class="meter-visual" aria-hidden="true">
+              <div class="pool-label"><span>可借资金池</span><strong id="poolLiquidity">35%</strong></div>
+              <div class="pool-track"><div class="pool-fill" id="poolFill"></div></div>
+              <div class="borrow-flow"><span></span><span></span><span></span></div>
+            </div>
+            <label class="control-label" for="utilization">
+              <span>资金利用率 Utilization</span><strong id="utilizationValue">65%</strong>
+            </label>
+            <input id="utilization" class="range teal" type="range" min="10" max="100" value="65" />
+            <div class="machine-result">
+              <div><span>当前借款年化</span><strong id="variableRate">7.2%</strong></div>
+              <div><span>一年后预计利息*</span><strong id="variableCost">720 USDC</strong></div>
+            </div>
+            <p class="machine-note">资金池越接近借满，IRM 通常会把利率推高。它会继续变化，并非今天看到多少就锁定多少。</p>
+          </div>
+
+          <div class="machine-body hidden" data-panel="fixed">
+            <div class="ticket" aria-hidden="true">
+              <div><span>NOW</span><strong id="fixedReceive">9,500</strong><small>现在收到</small></div>
+              <div class="ticket-line"><i></i><b>→</b><i></i></div>
+              <div><span>MATURITY</span><strong>10,000</strong><small>到期偿还</small></div>
+            </div>
+            <label class="control-label" for="unitPrice">
+              <span>单位成交价格 P</span><strong id="priceValue">0.950</strong>
+            </label>
+            <input id="unitPrice" class="range amber" type="range" min="850" max="995" value="950" />
+            <label class="control-label second" for="termMonths">
+              <span>距离到期</span><strong id="termValue">12 个月</strong>
+            </label>
+            <input id="termMonths" class="range amber" type="range" min="1" max="24" value="12" />
+            <div class="machine-result amber-result">
+              <div><span>锁定的期限成本</span><strong id="fixedCost">500 USDC</strong></div>
+              <div><span>隐含简单年化*</span><strong id="fixedApr">5.26%</strong></div>
+            </div>
+            <p class="machine-note">成交那一刻，单位价格就把这段期限的成本锁住。示例未计费用；真实成交成本来自订单报价。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="lesson-strip" aria-label="一句话理解">
+        <div><span class="number">01</span><b>Variable</b><p>借多久不预设，但利率一路变化。</p></div>
+        <div><span class="number">02</span><b>Fixed</b><p>利率先锁定，但债务有明确终点。</p></div>
+        <div><span class="number">03</span><b>Maturity</b><p>它不是提醒日期，而是风险规则切换点。</p></div>
+      </section>
+
+      <section class="compare section-shell" id="compare">
+        <div class="section-heading reveal">
+          <span class="chapter">CHAPTER 01</span>
+          <h2>一条会弯的河，<br />一张有日期的票</h2>
+          <p>拖动上面的控件，你已经看到了最核心的区别。现在把它们拆开。</p>
+        </div>
+
+        <div class="compare-grid">
+          <article class="rate-card variable-card reveal">
+            <div class="card-icon wave-icon" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span class="card-tag">VARIABLE-RATE</span>
+            <h3>浮动利率：市场实时定价</h3>
+            <p>在 Morpho Blue 这类市场里，利率由 IRM 计算，最重要的输入通常是资金利用率。</p>
+            <div class="mini-chart" aria-label="利用率上升时利率通常加速上升">
+              <svg viewBox="0 0 420 170" role="img">
+                <path class="grid-line" d="M24 26V144H400M24 104H400M24 65H400" />
+                <path class="curve-shadow" d="M24 136 C150 133, 250 119, 320 86 S376 30,400 18" />
+                <path class="curve" d="M24 136 C150 133, 250 119, 320 86 S376 30,400 18" />
+                <circle class="chart-dot" cx="320" cy="86" r="7" />
+              </svg>
+              <span class="axis-y">利率</span><span class="axis-x">利用率 →</span>
+            </div>
+            <ul class="plain-list">
+              <li><i>1</i><span>借款人多、可用流动性少，利率通常上升。</span></li>
+              <li><i>2</i><span>还款或新增存款释放流动性，利率可能下降。</span></li>
+              <li><i>3</i><span>没有固定到期日，但利息持续累积。</span></li>
+            </ul>
+          </article>
+
+          <article class="rate-card fixed-card reveal">
+            <div class="card-icon ticket-icon" aria-hidden="true">P</div>
+            <span class="card-tag">FIXED-RATE / FIXED-MATURITY</span>
+            <h3>固定利率：成交价锁住期限成本</h3>
+            <p>在 Morpho Midnight，借贷像交易一张到期支付 1 单位贷款资产的票据。</p>
+            <div class="formula-box">
+              <div><span>今天的单位价格</span><strong>P = 0.95</strong></div>
+              <div class="formula-arrow">→</div>
+              <div><span>到期偿还</span><strong>1.00</strong></div>
+              <code>期限简单利率 = 1 / P − 1 = 5.26%</code>
+            </div>
+            <ul class="plain-list">
+              <li><i>1</i><span>报价成交后，这一笔期限成本不再随资金池利用率漂移。</span></li>
+              <li><i>2</i><span>剩余期限不同，同一个 5.26% 期限收益对应的年化并不同。</span></li>
+              <li><i>3</i><span>锁住利率 ≠ 消除风险；你换来了明确的还款截止日。</span></li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="maturity-section" id="maturity">
+        <div class="section-shell maturity-layout">
+          <div class="section-heading reveal">
+            <span class="chapter">CHAPTER 02</span>
+            <h2>Maturity 是一扇门。<br />跨过去，规则会变。</h2>
+            <p>健康的抵押仓位，也不能把到期日当成普通日历提醒。</p>
+          </div>
+
+          <div class="timeline-lab reveal">
+            <div class="timeline-status" id="timelineStatus">
+              <span class="status-dot"></span>
+              <div><small>当前位置</small><strong id="timelineHeadline">到期前 30 天</strong></div>
+              <b id="timelineBadge">健康，可主动还款</b>
+            </div>
+
+            <div class="time-track" aria-hidden="true">
+              <div class="time-progress" id="timeProgress"></div>
+              <div class="time-marker start">借款</div>
+              <div class="time-marker maturity">MATURITY<br /><span>到期门</span></div>
+              <div class="time-cursor" id="timeCursor"><i></i></div>
+            </div>
+
+            <input id="timeSlider" class="range time-range" type="range" min="0" max="100" value="28" aria-label="调整到期前后时间" />
+            <div class="time-labels"><span>到期前</span><span>到期时刻</span><span>到期后</span></div>
+
+            <div class="before-after">
+              <div id="beforeRule" class="rule-card active">
+                <span>到期前 / 正好到期</span>
+                <strong>先看抵押健康度</strong>
+                <p>债务 ≤ maxDebt：健康。<br />债务 &gt; maxDebt：可按健康路径清算。</p>
+              </div>
+              <div id="afterRule" class="rule-card">
+                <span>严格晚于到期</span>
+                <strong>未还债务本身就是触发条件</strong>
+                <p>只要 debt &gt; 0，即使抵押仍健康，也可走 post-maturity liquidation。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="story-section section-shell">
+        <div class="story-intro reveal">
+          <span class="chapter">ANIMATED EXPLAINER</span>
+          <h2>跟着一笔债务，走完它的一生</h2>
+          <button id="playStory" class="primary-button compact" type="button">▶ 自动播放</button>
+        </div>
+
+        <div class="story-stage reveal" id="storyStage">
+          <div class="story-visual" aria-live="polite">
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="actor borrower"><span>借款人</span><b>抵押品</b></div>
+            <div class="actor market"><span>市场</span><b id="marketStateLabel">报价中</b></div>
+            <div class="actor lender"><span>出借人</span><b>资金</b></div>
+            <div class="flow-packet packet-one">USDC</div>
+            <div class="flow-packet packet-two">Debt</div>
+            <div class="deadline-gate"><i></i><strong>MATURITY</strong><small>2026-12-25</small></div>
+          </div>
+
+          <div class="story-copy">
+            <span id="storyStepLabel">STEP 1 / 4</span>
+            <h3 id="storyTitle">成交：价格决定固定成本</h3>
+            <p id="storyText">借款人卖出 debt units，今天拿到贷款资产；到期前需要偿还每个 debt unit 对应的 1 单位贷款资产。</p>
+            <div class="story-nav" role="tablist" aria-label="教学动画步骤">
+              <button class="story-dot active" type="button" data-step="0" aria-label="步骤 1"></button>
+              <button class="story-dot" type="button" data-step="1" aria-label="步骤 2"></button>
+              <button class="story-dot" type="button" data-step="2" aria-label="步骤 3"></button>
+              <button class="story-dot" type="button" data-step="3" aria-label="步骤 4"></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="risk-section" id="risk">
+        <div class="section-shell">
+          <div class="section-heading risk-heading reveal">
+            <span class="chapter">CHAPTER 03</span>
+            <h2>按下冲击按钮，<br />看看风险从哪里冒出来</h2>
+            <p>本金 10,000 USDC，抵押品价值 15,000 USDC，LLTV 80%。</p>
+          </div>
+
+          <div class="risk-lab reveal">
+            <div class="health-panel">
+              <div class="health-top">
+                <div><span>COLLATERAL</span><strong id="collateralValue">15,000</strong><small>USDC 等值</small></div>
+                <div class="health-ring" id="healthRing"><span>HF</span><strong id="healthFactor">1.20</strong></div>
+                <div><span>DEBT</span><strong>10,000</strong><small>USDC</small></div>
+              </div>
+              <div class="threshold-track">
+                <div class="debt-bar" id="debtBar"></div>
+                <div class="threshold-marker"><span>清算线 80%</span></div>
+              </div>
+              <div class="health-message" id="healthMessage"><i></i><span><strong>仓位健康</strong>，但风险不是零。</span></div>
+            </div>
+
+            <div class="shock-controls">
+              <button type="button" data-shock="oracle">
+                <span class="shock-icon">↓</span>
+                <b>Oracle 报价下跌 20%</b>
+                <small>抵押品缩水，LTV 被动上升</small>
+              </button>
+              <button type="button" data-shock="liquidity">
+                <span class="shock-icon">≋</span>
+                <b>市场流动性变薄</b>
+                <small>想退出或展期，却找不到好报价</small>
+              </button>
+              <button type="button" data-shock="maturity">
+                <span class="shock-icon">⌛</span>
+                <b>到期仍未还款</b>
+                <small>健康仓位也进入到期后清算路径</small>
+              </button>
+              <button type="button" class="reset-shock" data-shock="reset">↻ 重置实验</button>
+            </div>
+          </div>
+
+          <div class="risk-cards">
+            <article class="risk-card reveal">
+              <span class="risk-index">RISK 01</span><h3>Liquidity / Refinancing</h3>
+              <p>固定利率解决的是“价格会不会变”，不是“到期时有没有钱还”。订单簿变薄时，提前退出和展期都可能更贵，甚至暂时无法成交。</p>
+              <div class="risk-signal"><i></i><span>关键问题：到期前，新的资金从哪里来？</span></div>
+            </article>
+            <article class="risk-card reveal">
+              <span class="risk-index">RISK 02</span><h3>Liquidation</h3>
+              <p>两类路径并存：抵押不足会触发 health-based liquidation；严格晚于 maturity，未还债务又会触发 post-maturity liquidation。</p>
+              <div class="risk-signal amber"><i></i><span>同一笔债，在到期前后面对不同规则。</span></div>
+            </article>
+            <article class="risk-card reveal">
+              <span class="risk-index">RISK 03</span><h3>Oracle</h3>
+              <p>协议用 oracle 把抵押品折算成贷款资产价值。报价错误、延迟或失效，会扭曲 maxDebt、健康度和清算判断。</p>
+              <div class="risk-signal red"><i></i><span>价格源不是装饰，它是风险引擎的输入。</span></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="why-section section-shell">
+        <div class="why-card reveal">
+          <div class="why-title">
+            <span class="chapter">THE BIG IDEA</span>
+            <h2>为什么 fixed maturity<br />不是“普通借贷 + 固定利率”？</h2>
+          </div>
+          <div class="why-grid">
+            <div><span>01</span><strong>日期悬崖</strong><p>风险不是平滑延续；跨过 maturity，未偿债务的法律般“状态”改变。</p></div>
+            <div><span>02</span><strong>流动性被期限切片</strong><p>12 月到期与明年 3 月到期，是不同市场、不同订单和不同深度。</p></div>
+            <div><span>03</span><strong>利率风险换成再融资风险</strong><p>你不再担心每天涨息，却必须担心到期能否还款或滚到下一期。</p></div>
+            <div><span>04</span><strong>两套清算时钟</strong><p>抵押价格是一只钟，到期日是另一只钟；任何一只响，都可能进入清算。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-compare section-shell">
+        <div class="section-heading centered reveal">
+          <span class="chapter">KEEP THIS</span>
+          <h2>最后，只记住这张表</h2>
+        </div>
+        <div class="table-wrap reveal">
+          <table>
+            <thead><tr><th>问题</th><th>Variable-rate（Aave / Morpho Blue 类）</th><th>Fixed maturity（Morpho Midnight）</th></tr></thead>
+            <tbody>
+              <tr><th>借款成本</th><td>IRM 根据利用率持续更新</td><td>成交 unit price 锁定期限成本</td></tr>
+              <tr><th>债务期限</th><td>通常开放式，无固定到期日</td><td>有明确 maturity</td></tr>
+              <tr><th>到期后</th><td>没有“到期后”这一规则切换</td><td>未还 debt 可被到期后清算</td></tr>
+              <tr><th>主要流动性风险</th><td>提款/借款受池内可用流动性影响</td><td>退出、成交和展期依赖对应期限订单</td></tr>
+              <tr><th>共同风险</th><td colspan="2">抵押价格下跌、oracle 异常、清算执行与坏账风险</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div>
+        <strong>Fixed or Floating?</strong>
+        <p>一个面向 DeFi 初学者的互动教学实验。不是投资建议。</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://docs.morpho.org/learn/concepts/blue/" target="_blank" rel="noreferrer">Morpho Blue ↗</a>
+        <a href="https://docs.morpho.org/learn/concepts/midnight/" target="_blank" rel="noreferrer">Morpho Midnight ↗</a>
+        <a href="https://docs.morpho.org/learn/concepts/midnight/liquidations/" target="_blank" rel="noreferrer">Liquidations ↗</a>
+      </div>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
