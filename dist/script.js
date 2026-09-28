@@ -85,6 +85,19 @@ const englishText = new Map(Object.entries({
   '按下冲击按钮，': 'Press a shock button',
   '看看风险从哪里冒出来': 'and watch risk surface',
   '本金 10,000 USDC，抵押品价值 15,000 USDC，LLTV 80%。': 'Debt: 10,000 USDC. Collateral value: 15,000 USDC. LLTV: 80%.',
+  '先别怕缩写。把风险看成三个小问题：抵押品值多少、协议最多让你借多少、你现在欠多少。': 'Ignore the acronyms for a moment. Risk comes down to three questions: what is the collateral worth, how much may you borrow, and how much do you owe?',
+  '先说人话': 'PLAIN ENGLISH',
+  '三个缩写，其实是一道小学除法题': 'Three acronyms, one simple division problem',
+  '本例：抵押品价值 15,000 USDC，债务 10,000 USDC，协议设置的 LLTV 是 80%。': 'Example: collateral is worth 15,000 USDC, debt is 10,000 USDC, and the protocol sets LLTV at 80%.',
+  '“我借得有多满？”': '“How full is my borrowing limit?”',
+  '债务 ÷ 抵押品价值。越高，安全垫越薄。': 'Debt ÷ collateral value. The higher it goes, the thinner your safety buffer.',
+  '“协议画的红线在哪里？”': '“Where is the protocol’s red line?”',
+  'Liquidation Loan-to-Value，意思是清算贷款价值比上限。': 'Liquidation Loan-to-Value: the maximum LTV allowed before health-based liquidation.',
+  '本市场的红线': 'This market’s red line',
+  '“离红线还有多远？”': '“How far am I from the red line?”',
+  'Health Factor，健康系数。这里等于 maxDebt ÷ debt。': 'Health Factor. Here it equals maxDebt ÷ debt.',
+  '把数字连起来': 'PUT THE NUMBERS TOGETHER',
+  '但有一个重要例外：严格晚于 maturity，只要还有 debt，HF 大于 1 也不能阻止到期后清算。': 'One important exception: strictly after maturity, outstanding debt can be liquidated even when HF is above 1.',
   'USDC 等值': 'USDC value',
   '清算线 80%': 'Liquidation line 80%',
   '仓位健康': 'Position healthy',
@@ -141,6 +154,8 @@ const dynamicCopy = {
     oracle: '<i></i><span><strong>抵押不足：</strong> debt 已超过 maxDebt，可触发健康路径清算。</span>',
     liquidity: '<i></i><span><strong>偿付能力仍健康，</strong>但退出或展期报价可能很差——这是流动性风险。</span>',
     maturity: '<i></i><span><strong>到期未还：</strong>即使 HF 仍为 1.20，也可走 post-maturity liquidation。</span>',
+    plainHealthy: '<strong>HF ≥ 1：</strong>到期前，抵押品安全垫还在。HF &lt; 1 时，债务超过协议允许的最大值，可触发健康度清算。',
+    plainDanger: '<strong>HF &lt; 1：</strong>安全垫已经用完。债务大于 maxDebt，现在可触发健康度清算。',
   },
   en: {
     month: 'months', before: (days) => `${days} days before maturity`, after: (days) => `${days} days after maturity`, at: 'Exactly at maturity',
@@ -150,6 +165,8 @@ const dynamicCopy = {
     oracle: '<i></i><span><strong>Undercollateralized:</strong> debt exceeds maxDebt, enabling health-based liquidation.</span>',
     liquidity: '<i></i><span><strong>Still solvent,</strong> but exit or refinancing quotes may be poor—this is liquidity risk.</span>',
     maturity: '<i></i><span><strong>Unpaid after maturity:</strong> post-maturity liquidation is available even with HF at 1.20.</span>',
+    plainHealthy: '<strong>HF ≥ 1:</strong> before maturity, a collateral buffer remains. If HF falls below 1, debt exceeds the protocol maximum and health-based liquidation becomes available.',
+    plainDanger: '<strong>HF &lt; 1:</strong> the buffer is gone. Debt is above maxDebt, so health-based liquidation is now available.',
   },
 };
 
@@ -293,17 +310,38 @@ const shockButtons = $$('[data-shock]');
 function applyShock(type) {
   activeShock = type;
   const panel = $('.health-panel');
+  const decoder = $('.jargon-decoder');
   shockButtons.forEach((button) => button.classList.toggle('active', button.dataset.shock === type && type !== 'reset'));
   panel.classList.remove('danger');
+  decoder.classList.remove('danger');
   $('#collateralValue').textContent = '15,000';
   $('#healthFactor').textContent = '1.20';
+  $('#currentLtv').textContent = '66.7%';
+  $('#glossaryHf').textContent = '1.20';
+  $('#exampleHf').textContent = '1.20';
+  $('#maxDebtValue').textContent = '12,000';
+  $('#ltvFormula').textContent = '10,000 ÷ 15,000';
+  $('#glossaryHfFormula').textContent = '12,000 ÷ 10,000';
+  $('#maxDebtFormula').textContent = '15,000 × 80%';
+  $('#hfFormula').textContent = '12,000 ÷ 10,000';
+  $('#plainHealthState').innerHTML = dynamicCopy[currentLanguage].plainHealthy;
   $('#debtBar').style.width = '66.66%';
   $('#healthMessage').innerHTML = dynamicCopy[currentLanguage].healthy;
 
   if (type === 'oracle') {
     panel.classList.add('danger');
+    decoder.classList.add('danger');
     $('#collateralValue').textContent = '12,000';
     $('#healthFactor').textContent = '0.96';
+    $('#currentLtv').textContent = '83.3%';
+    $('#glossaryHf').textContent = '0.96';
+    $('#exampleHf').textContent = '0.96';
+    $('#maxDebtValue').textContent = '9,600';
+    $('#ltvFormula').textContent = '10,000 ÷ 12,000';
+    $('#glossaryHfFormula').textContent = '9,600 ÷ 10,000';
+    $('#maxDebtFormula').textContent = '12,000 × 80%';
+    $('#hfFormula').textContent = '9,600 ÷ 10,000';
+    $('#plainHealthState').innerHTML = dynamicCopy[currentLanguage].plainDanger;
     $('#debtBar').style.width = '83.33%';
     $('#healthMessage').innerHTML = dynamicCopy[currentLanguage].oracle;
   }

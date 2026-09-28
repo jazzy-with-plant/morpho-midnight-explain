@@ -5,6 +5,7 @@
 - variable-rate lending 的利率为什么会变化；
 - fixed-rate lending 如何通过成交价格锁定期限成本；
 - maturity 对债务状态和清算规则的影响；
+- 用具体数字解释 LTV、LLTV、maxDebt 和 Health Factor（HF）；
 - liquidity、refinancing、liquidation 与 oracle 风险；
 - Morpho Midnight 为什么不是“普通借贷 + 固定利率”。
 

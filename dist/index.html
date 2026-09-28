@@ -257,7 +257,48 @@
           <div class="section-heading risk-heading reveal">
             <span class="chapter">CHAPTER 03</span>
             <h2>按下冲击按钮，<br />看看风险从哪里冒出来</h2>
-            <p>本金 10,000 USDC，抵押品价值 15,000 USDC，LLTV 80%。</p>
+            <p>先别怕缩写。把风险看成三个小问题：抵押品值多少、协议最多让你借多少、你现在欠多少。</p>
+          </div>
+
+          <div class="jargon-decoder reveal">
+            <div class="decoder-head">
+              <span>先说人话</span>
+              <h3>三个缩写，其实是一道小学除法题</h3>
+              <p>本例：抵押品价值 15,000 USDC，债务 10,000 USDC，协议设置的 LLTV 是 80%。</p>
+            </div>
+            <div class="term-grid">
+              <article>
+                <span class="term-name">LTV</span>
+                <strong>“我借得有多满？”</strong>
+                <p>债务 ÷ 抵押品价值。越高，安全垫越薄。</p>
+                <code id="ltvFormula">10,000 ÷ 15,000</code>
+                <b id="currentLtv">66.7%</b>
+              </article>
+              <article>
+                <span class="term-name amber">LLTV</span>
+                <strong>“协议画的红线在哪里？”</strong>
+                <p>Liquidation Loan-to-Value，意思是清算贷款价值比上限。</p>
+                <code>本市场的红线</code>
+                <b>80%</b>
+              </article>
+              <article>
+                <span class="term-name blue">HF</span>
+                <strong>“离红线还有多远？”</strong>
+                <p>Health Factor，健康系数。这里等于 maxDebt ÷ debt。</p>
+                <code id="glossaryHfFormula">12,000 ÷ 10,000</code>
+                <b id="glossaryHf">1.20</b>
+              </article>
+            </div>
+            <div class="worked-example">
+              <span>把数字连起来</span>
+              <div class="equation-row">
+                <code id="maxDebtFormula">15,000 × 80%</code><i>＝</i><strong><b id="maxDebtValue">12,000</b> maxDebt</strong>
+                <i>→</i>
+                <code id="hfFormula">12,000 ÷ 10,000</code><i>＝</i><strong>HF <b id="exampleHf">1.20</b></strong>
+              </div>
+              <p id="plainHealthState"><strong>HF ≥ 1：</strong>到期前，抵押品安全垫还在。HF &lt; 1 时，债务超过协议允许的最大值，可触发健康度清算。</p>
+              <small>但有一个重要例外：严格晚于 maturity，只要还有 debt，HF 大于 1 也不能阻止到期后清算。</small>
+            </div>
           </div>
 
           <div class="risk-lab reveal">
