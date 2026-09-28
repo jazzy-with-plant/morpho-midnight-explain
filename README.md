@@ -1,6 +1,6 @@
 # Morpho Midnight Explain
 
-一个面向 DeFi 初学者的中文互动教学网站，用动画和可操作实验解释：
+一个面向 DeFi 初学者的中英双语互动教学网站。右上角可随时切换中文 / English，选择会保存在当前浏览器中。网站用动画和可操作实验解释：
 
 - variable-rate lending 的利率为什么会变化；
 - fixed-rate lending 如何通过成交价格锁定期限成本；
